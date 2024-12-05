@@ -7,7 +7,7 @@
   ],
   "sdk": 3,
   "name": {
-    "en": "Tuya Zigbee"
+    "en": "Tuya Zigbee (Ronald's version)"
   },
   "description": {
     "en": "Control your white label Zigbee devices made by Tuya"

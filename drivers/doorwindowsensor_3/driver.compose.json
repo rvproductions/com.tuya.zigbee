@@ -1,7 +1,7 @@
 {
   "id": "doorwindowsensor_3",
   "name": {
-    "en": "Door & Window Sensor"
+    "en": "Door & Window Sensor (Edited)"
   },
   "class": "sensor",
   "platforms": ["local"],
@@ -24,7 +24,8 @@
     "manufacturerName": [
       "_TZ3000_zgrffiwg",
       "_TZ3000_bpkijo14",
-      "_TZ3000_uvti8nkd"
+      "_TZ3000_uvti8nkd",
+	  "_TZ3000_bwjstafw"
     ],
     "productId": [
       "TS0203"
