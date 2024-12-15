@@ -8,10 +8,8 @@ class temphumidsensor2 extends ZigBeeDevice {
 
 	async onNodeInit({zclNode}) {
 
-/*     debug(true);
-    this.enableDebug(); */
-
 		this.printNode();
+
 
 		// measure_temperature
 		zclNode.endpoints[1].clusters[CLUSTER.TEMPERATURE_MEASUREMENT.NAME]
@@ -49,7 +47,7 @@ class temphumidsensor2 extends ZigBeeDevice {
 	}
 
 	onDeleted(){
-	this.log("temphumidsensor removed")
+		this.log("temphumidsensor removed")
 	}
 
 }

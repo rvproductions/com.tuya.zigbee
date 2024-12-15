@@ -1,19 +1,20 @@
 {
-  "id": "doorwindowsensor_3",
+  "id": "temphumidsensor6",
   "name": {
-    "en": "Door & Window Sensor (Edited)"
+    "en": "Mini Ali Climate Sensor"
   },
   "class": "sensor",
   "platforms": ["local"],
   "connectivity": ["zigbee"],
   "capabilities": [
-    "alarm_contact",
+    "measure_temperature",
+    "measure_humidity",
+    "measure_battery",
     "alarm_battery"
   ],
   "energy": {
     "batteries": [
-      "AAA",
-      "AAA"
+      "CR2450"
     ]
   },
   "images": {
@@ -22,13 +23,10 @@
   },
   "zigbee": {
     "manufacturerName": [
-      "_TZ3000_zgrffiwg",
-      "_TZ3000_bpkijo14",
-      "_TZ3000_uvti8nkd",
-	  "_TZ3000_bwjstafw"
+      "_TZ3000_akqdg6g7"
     ],
     "productId": [
-      "TS0203"
+      "TS0201"
     ],
     "endpoints": {
       "1": {
@@ -36,12 +34,14 @@
           0,
           1,
 		  3,
-          1280
+          1026,
+          1029
         ],
         "bindings": [
           1,
 		  3,
-		  1280
+          1026,
+          1029
         ]
       }
     },

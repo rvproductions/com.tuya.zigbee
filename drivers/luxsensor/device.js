@@ -4,13 +4,13 @@ const Homey = require('homey');
 const { ZigBeeDevice } = require('homey-zigbeedriver');
 const { CLUSTER } = require('zigbee-clusters');
 
-class doorwindowsensor_3 extends ZigBeeDevice {
-		
+class luxsensor extends ZigBeeDevice {
+	
 	async onNodeInit({zclNode}) {
 
 		this.printNode();
 
-		if (this.isFirstInit()) {
+   		if (this.isFirstInit()){
 			await this.configureAttributeReporting([
 				{
 					endpointId: 1,
@@ -18,80 +18,104 @@ class doorwindowsensor_3 extends ZigBeeDevice {
 					attributeName: 'batteryPercentageRemaining',
 					minInterval: 60, // Minimum interval (1 minute)
 					maxInterval: 21600, // Maximum interval (6 hours)
-					minChange: 2, // Report changes greater than 1%
+					minChange: 1, // Report changes greater than 1%
 				}
 			]).catch(this.error);
 		}
 		
-		// alarm_contact
+		this.log(zclNode.endpoints[1].clusters.iasZone);
+		
+		zclNode.endpoints[1].clusters.iasZone.onZoneEnrollRequest = payload => {
+			this.log('luxsensor | onZoneEnrollRequest', payload);
+			zclNode.endpoints[1].clusters.iasZone.zoneEnrollResponse({
+				enrollResponseCode: 0, // Success
+				zoneId: 11, // Choose a zone id
+			});
+		};
+
 		zclNode.endpoints[1].clusters[CLUSTER.IAS_ZONE.NAME].onZoneStatusChangeNotification = payload => {
 			this.onIASZoneStatusChangeNotification(payload);
 		}
+		
+		// measure_luminance
+		zclNode.endpoints[1].clusters[CLUSTER.ILLUMINANCE_MEASUREMENT.NAME]
+			.on('attr.measuredValue', this.onIlluminanceMeasuredAttributeReport.bind(this));
+
+		// measure_battery // alarm_battery
+		zclNode.endpoints[1].clusters[CLUSTER.POWER_CONFIGURATION.NAME]
+		 	.on('attr.batteryPercentageRemaining', this.onBatteryPercentageRemainingAttributeReport.bind(this));
+
+	}
+	
+	onIASZoneStatusChangeNotification({ zoneStatus, extendedStatus, zoneId, delay,}) {
+		this.log('LuxSensor IASZoneStatusChangeNotification received:', zoneStatus, extendedStatus, zoneId, delay, this.node, this.zclNode);
+	//	this.setCapabilityValue('alarm_battery', zoneStatus.battery).catch(this.error);
 	}
 
-	onIASZoneStatusChangeNotification({zoneStatus, extendedStatus, zoneId, delay,}) {
-		this.log('IASZoneStatusChangeNotification received:', zoneStatus, extendedStatus, zoneId, delay);
-		this.setCapabilityValue('alarm_contact', zoneStatus.alarm1).catch(this.error);
-		this.setCapabilityValue('alarm_battery', zoneStatus.battery).catch(this.error);
+	onIlluminanceMeasuredAttributeReport(measuredValue) {
+	 	const parsedValue = 10 ** ((measuredValue - 1) / 10000);
+		this.log('measure_luminance | Luminance - measuredValue (lux):', parsedValue, measuredValue, this.node, this.zclNode);
+	 	this.setCapabilityValue('measure_luminance', parsedValue).catch(this.error);
+	}
+
+	onBatteryPercentageRemainingAttributeReport(batteryPercentageRemaining) {
+		this.log("measure_battery | powerConfiguration - batteryPercentageRemaining (%): ", batteryPercentageRemaining/2);
+		this.setCapabilityValue('measure_battery', batteryPercentageRemaining/2).catch(this.error);
 	}
 
 	onDeleted(){
-		this.log("Door/Window Sensor removed")
+		this.log("luxsensor removed")
 	}
 
 }
 
-module.exports = doorwindowsensor_3;
-
+module.exports = luxsensor;
 
 /*
-
 "ids": {
-	"modelId": "TS0203",
-	"manufacturerName": "_TZ3000_bwjstafw"
+	"modelId": "TS0222",
+		"manufacturerName": "_TZ3000_hy6ncvmw"
 },
 "endpoints": {
-	"ieeeAddress": "a4:c1:38:03:f7:59:43:68",
-	"networkAddress": 38443,
-	"modelId": "TS0203",
-	"manufacturerName": "_TZ3000_bwjstafw",
-	"endpointDescriptors": [
-		{
-			"status": "SUCCESS",
-			"nwkAddrOfInterest": 38443,
-			"_reserved": 32,
-			"endpointId": 1,
-			"applicationProfileId": 260,
-			"applicationDeviceId": 1026,
-			"applicationDeviceVersion": 0,
-			"_reserved1": 1,
-			"inputClusters": [
-				1,
-				3,
-				1280,
-				0
-			],
-			"outputClusters": [
-				3,
-				4,
-				5,
-				6,
-				8,
-				4096,
-				25,
-				10
-			]
-		}
-	],
-	"deviceType": "enddevice",
-	"receiveWhenIdle": false,
-	"capabilities": {
+	"ieeeAddress": "a4:c1:38:15:54:f0:60:8e",
+		"networkAddress": 6453,
+			"modelId": "TS0222",
+				"manufacturerName": "_TZ3000_hy6ncvmw",
+					"endpointDescriptors": [
+						{
+							"status": "SUCCESS",
+							"nwkAddrOfInterest": 6453,
+							"_reserved": 28,
+							"endpointId": 1,
+							"applicationProfileId": 260,
+							"applicationDeviceId": 262,
+							"applicationDeviceVersion": 0,
+							"_reserved1": 1,
+							"inputClusters": [
+								1,
+								3,
+								1026,
+								1029,
+								1024,
+								1280,
+								0
+							],
+							"outputClusters": [
+								3,
+								25,
+								10
+							]
+						}
+					],
+						"deviceType": "enddevice",
+							"receiveWhenIdle": false,
+								"capabilities": {
 		"alternatePANCoordinator": false,
-		"deviceType": false,
-		"powerSourceMains": false,
-		"receiveWhenIdle": false,
-		"security": false,
-		"allocateAddress": true
+			"deviceType": false,
+				"powerSourceMains": false,
+					"receiveWhenIdle": false,
+						"security": false,
+							"allocateAddress": true
 	},
 	"extendedEndpointDescriptors": {
 		"1": {
@@ -153,11 +177,141 @@ module.exports = doorwindowsensor_3;
 				"identify": {
 					"attributes": []
 				},
+				"temperatureMeasurement": {
+					"attributes": [
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 0,
+							"name": "measuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 1,
+							"name": "minMeasuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 2,
+							"name": "maxMeasuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 65533,
+							"name": "clusterRevision",
+							"value": 2,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						}
+					]
+				},
+				"relativeHumidity": {
+					"attributes": [
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 0,
+							"name": "measuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 1,
+							"name": "minMeasuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 2,
+							"name": "maxMeasuredValue",
+							"value": 0,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						},
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 65533,
+							"name": "clusterRevision",
+							"value": 2,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						}
+					]
+				},
+				"illuminanceMeasurement": {
+					"attributes": [
+						{
+							"acl": [
+								"readable",
+								"reportable"
+							],
+							"id": 0,
+							"name": "measuredValue",
+							"value": 19244,
+							"reportingConfiguration": {
+								"status": "NOT_FOUND",
+								"direction": "reported"
+							}
+						}
+					]
+				},
 				"iasZone": {
 					"attributes": [
 						{
 							"acl": [
 								"readable",
+								"writable",
 								"reportable"
 							],
 							"id": 0,
@@ -175,7 +329,6 @@ module.exports = doorwindowsensor_3;
 							],
 							"id": 1,
 							"name": "zoneType",
-							"value": "contactSwitch",
 							"reportingConfiguration": {
 								"status": "NOT_FOUND",
 								"direction": "reported"
@@ -217,6 +370,7 @@ module.exports = doorwindowsensor_3;
 						{
 							"acl": [
 								"readable",
+								"writable",
 								"reportable"
 							],
 							"id": 17,
@@ -260,7 +414,7 @@ module.exports = doorwindowsensor_3;
 							],
 							"id": 1,
 							"name": "appVersion",
-							"value": 70
+							"value": 67
 						},
 						{
 							"acl": [
@@ -287,7 +441,7 @@ module.exports = doorwindowsensor_3;
 							],
 							"id": 4,
 							"name": "manufacturerName",
-							"value": "_TZ3000_bwjstafw"
+							"value": "_TZ3000_hy6ncvmw"
 						},
 						{
 							"acl": [
@@ -296,7 +450,7 @@ module.exports = doorwindowsensor_3;
 							],
 							"id": 5,
 							"name": "modelId",
-							"value": "TS0203"
+							"value": "TS0222"
 						},
 						{
 							"acl": [
@@ -363,63 +517,9 @@ module.exports = doorwindowsensor_3;
 				"identify": {
 					"attributes": []
 				},
-				"groups": {
+				"ota": { },
+				"time": {
 					"attributes": [
-						{
-							"acl": [
-								"readable"
-							],
-							"id": 0,
-							"name": "nameSupport",
-							"value": {
-								"type": "Buffer",
-								"data": [
-									0
-								]
-							}
-						},
-						{
-							"acl": [
-								"readable"
-							],
-							"id": 65533,
-							"name": "clusterRevision",
-							"value": 2
-						}
-					]
-				},
-				"scenes": {},
-				"onOff": {
-					"attributes": [
-						{
-							"acl": [
-								"readable"
-							],
-							"id": 0,
-							"name": "onOff",
-							"value": false
-						},
-						{
-							"acl": [
-								"readable"
-							],
-							"id": 65533,
-							"name": "clusterRevision",
-							"value": 2
-						}
-					]
-				},
-				"levelControl": {
-					"attributes": [
-						{
-							"acl": [
-								"readable",
-								"writable"
-							],
-							"id": 0,
-							"name": "currentLevel",
-							"value": 0
-						},
 						{
 							"acl": [
 								"readable"
@@ -429,13 +529,9 @@ module.exports = doorwindowsensor_3;
 							"value": 1
 						}
 					]
-				},
-				"touchlink": {},
-				"ota": {},
-				"time": {}
+				}
 			}
 		}
 	}
 }
-
 */
