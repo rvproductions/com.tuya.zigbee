@@ -1,6 +1,6 @@
 {
-  "id": "com.tuya.zigbee",
-  "version": "0.2.74",
+  "id": "mobi.rvp.homey",
+  "version": "0.01",
   "compatibility": ">=5.0.0",
   "platforms": [
     "local"

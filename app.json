@@ -66,11 +66,11 @@
   "permissions": [
     "homey:wireless:zigbee"
   ],
-  "homeyCommunityTopicId": null,
-  "source": "https://github.com/rvproductions/com.tuya.zigbee",
+  "homeyCommunityTopicId": 26439,
+  "source": "https://github.com/JohanBendz/com.tuya.zigbee",
   "support": "mailto:johan_bendz@hotmail.com",
   "bugs": {
-    "url": "https://github.com/rvproductions/com.tuya.zigbee/issues"
+    "url": "https://github.com/JohanBendz/com.tuya.zigbee/issues"
   },
   "images": {
     "large": "/assets/images/large.png",
