@@ -3,7 +3,7 @@
     "name": {
       "en": "RGB LED Strip Controller"
     },
-    "$extends": ["light_color"],
+    "$extends": ["light_color", "lidl_xmas_mode"],
     "energy": {
       "approximation": {
         "usageOn": 0,
@@ -18,7 +18,8 @@
         "_TZ3000_i8l0nqdu",
         "_TZ3000_ukuvyhaa",
         "_TZ3210_k1pe6ibm",
-		"_TZ3210_0zabbfax"
+		"_TZ3210_0zabbfax",
+		"_TZ3210_y5rtzkmc"
       ],
       "productId": [
         "TS0503A",
